@@ -48,7 +48,6 @@ const LocalTourPackageForm = () => {
   // Image state
   const [images, setImages] = useState([]);
   const [currentInclude, setCurrentInclude] = useState('');
-  const [currentDate, setCurrentDate] = useState('');
 
   // Fetch provinces on mount
   useEffect(() => {
@@ -146,23 +145,44 @@ const LocalTourPackageForm = () => {
     }));
   };
 
-  // Add available date
-  const addDate = () => {
-    if (currentDate) {
-      setFormData(prev => ({
-        ...prev,
-        availableDates: [...prev.availableDates, currentDate]
-      }));
-      setCurrentDate('');
+  // Generate next 7 days with day names
+  const getNext7Days = () => {
+    const days = [];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      const dayName = dayNames[date.getDay()];
+      const dateStr = date.toISOString().split('T')[0];
+      const displayDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      days.push({
+        dayName,
+        dateStr,
+        displayDate,
+        fullDate: `${dayName}, ${displayDate}`
+      });
     }
+    return days;
   };
 
-  // Remove available date
-  const removeDate = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      availableDates: prev.availableDates.filter((_, i) => i !== index)
-    }));
+  // Toggle available date
+  const toggleDate = (dateStr) => {
+    setFormData(prev => {
+      const exists = prev.availableDates.includes(dateStr);
+      if (exists) {
+        return {
+          ...prev,
+          availableDates: prev.availableDates.filter(d => d !== dateStr)
+        };
+      } else {
+        return {
+          ...prev,
+          availableDates: [...prev.availableDates, dateStr]
+        };
+      }
+    });
   };
 
   // Handle form submission
@@ -454,38 +474,62 @@ const LocalTourPackageForm = () => {
           {/* Available Dates */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Available Dates *</h2>
-            
-            <div className="flex gap-2 mb-4">
-              <input
-                type="date"
-                value={currentDate}
-                onChange={(e) => setCurrentDate(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-              <button
-                type="button"
-                onClick={addDate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add</span>
-              </button>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Select available days for your tour:</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {getNext7Days().map((day) => (
+                  <button
+                    key={day.dateStr}
+                    type="button"
+                    onClick={() => toggleDate(day.dateStr)}
+                    className={`p-3 rounded-lg border-2 transition-all text-center ${
+                      formData.availableDates.includes(day.dateStr)
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:border-green-400'
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900 dark:text-white text-sm">
+                      {day.dayName}
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      {day.displayDate}
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {formData.availableDates.map((date, index) => (
-                <div key={index} className="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-                  <span className="text-gray-900 dark:text-white">{new Date(date).toLocaleDateString()}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeDate(index)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+            {/* Selected Dates Summary */}
+            {formData.availableDates.length > 0 && (
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
+                  Selected Dates ({formData.availableDates.length}):
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.availableDates.map((date) => {
+                    const dateObj = new Date(date);
+                    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dateObj.getDay()];
+                    const displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return (
+                      <span
+                        key={date}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm"
+                      >
+                        {dayName}, {displayDate}
+                        <button
+                          type="button"
+                          onClick={() => toggleDate(date)}
+                          className="ml-1 hover:text-green-600 dark:hover:text-green-400"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Includes */}
