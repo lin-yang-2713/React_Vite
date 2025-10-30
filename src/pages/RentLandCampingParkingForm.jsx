@@ -268,13 +268,12 @@ const RentLandCampingParkingForm = () => {
         )}
 
         {/* Success Modal */}
-        {success && (
-          <SuccessModal
-            title="Published Successfully!"
-            message="Your rent land camping & parking listing has been published successfully. Redirecting to My Advertisements..."
-            onClose={() => navigate('/my-advertisements')}
-          />
-        )}
+        <SuccessModal
+          isOpen={success}
+          title="Published Successfully!"
+          message="Your rent land camping & parking listing has been published successfully. Redirecting to My Advertisements..."
+          onClose={() => navigate('/my-advertisements')}
+        />
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 space-y-8">
